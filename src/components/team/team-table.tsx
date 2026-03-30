@@ -29,22 +29,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 type Department = { id: string; name: string };
-// type Profile = {
-//   id: string;
-//   full_name: string | null;
-//   email: string;
-//   avatar_url: string | null;
-//   manager_id: string | null;
-//   role_id: string | null;
-//   is_active?: boolean;
-//   employee_id?: string | null;
-//   phone?: string | null;
-//   department_id?: string | null;
-//   joining_date?: string | null;
-//   manager_name?: string | null;
-//   roles?: { id: string; name: string; slug: string } | { id: string; name: string; slug: string }[] | null;
-//   departments?: { id: string; name: string } | { id: string; name: string }[] | null;
-// };
 
 type Profile = {
   id: string;
@@ -135,20 +119,6 @@ export function TeamTable({
     window.location.reload();
   }
 
-  // async function handleToggleActive(profileId: string, checked: boolean) {
-  //   const res = await fetch(`/api/team/profile/${profileId}`, {
-  //     method: "PATCH",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ is_active: checked }),
-  //   });
-  //   if (!res.ok) {
-  //     const data = await res.json().catch(() => ({}));
-  //     toast.error(data.error || "Failed to update status");
-  //     return;
-  //   }
-  //   toast.success(checked ? "Active" : "Inactive");
-  //   window.location.reload();
-  // }
   async function handleToggleActive(profileId: string, checked: boolean) {
   const res = await fetch(`/api/team/profile/${profileId}`, {
     method: "PATCH",
@@ -235,8 +205,6 @@ async function handleInvite() {
   }
 }
 
-  
-
   function openEdit(p: Profile) {
     setEditProfile(p);
     setEditFullName(p.full_name ?? "");
@@ -250,32 +218,55 @@ async function handleInvite() {
   }
 
   async function handleEdit() {
-    if (!editProfile) return;
-    setEditLoading(true);
-    const res = await fetch(`/api/team/profile/${editProfile.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        full_name: editFullName.trim() || null,
-        avatar_url: editAvatarUrl.trim() || null,
-        employee_id: editEmployeeId.trim() || null,
-        phone: editMobile.trim() || null,
-        department_id: editDepartmentId || null,
-        joining_date: editJoiningDate || null,
-        manager_id: editManagerId || null,
-      }),
-    });
-    setEditLoading(false);
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      toast.error(data.error || "Failed to update");
-      return;
-    }
-    toast.success("Profile updated");
-    setEditOpen(false);
-    setEditProfile(null);
-    window.location.reload();
+  if (!editProfile) return;
+
+  setEditLoading(true);
+
+  const res = await fetch(`/api/team/profile/${editProfile.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      full_name: editFullName.trim() || null,
+      avatar_url: editAvatarUrl.trim() || null,
+      employee_id: editEmployeeId.trim() || null,
+      phone: editMobile.trim() || null,
+      department_id: editDepartmentId || null,
+      joining_date: editJoiningDate || null,
+      manager_id: editManagerId || null,
+    }),
+  });
+
+  setEditLoading(false);
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    toast.error(data.error || "Failed to update");
+    return;
   }
+
+  toast.success("Profile updated");
+
+  // ✅ RELOAD REMOVE → STATE UPDATE
+  setTeamData(prev =>
+    prev.map(p =>
+      p.id === editProfile.id
+        ? {
+            ...p,
+            full_name: editFullName,
+            avatar_url: editAvatarUrl,
+            employee_id: editEmployeeId,
+            phone: editMobile,
+            department_id: editDepartmentId,
+            joining_date: editJoiningDate,
+            manager_id: editManagerId,
+          }
+        : p
+    )
+  );
+
+  setEditOpen(false);
+  setEditProfile(null);
+}
 
   function openResetPw(p: Profile) {
     setResetPwProfile(p);
